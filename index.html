@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>S-SYSTEM | VAA GENESIS COMMAND</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="bg-matrix"></div>
+    <div class="scanlines"></div>
+
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="login-screen" class="overlay">
+        <div class="glass-box login-panel">
+            <div class="shield-logo"><i class="fas fa-skull text-red fa-3x glow-pulse"></i></div>
+            <h1 class="brand-glitch" style="margin: 10px 0;">S-SYSTEM</h1>
+            <div class="input-row"><i class="fas fa-terminal"></i><input type="text" id="username" placeholder="UID"></div>
+            <div class="input-row"><i class="fas fa-fingerprint"></i><input type="password" id="password" placeholder="Mật mã"></div>
+            <button onclick="login()" class="btn-cyber w-100" style="margin-top: 15px;">[ KHỞI ĐỘNG ]</button>
+        </div>
+    </div>
+
+    <div id="dashboard" class="layout-container" style="display: none;">
+        <aside class="sidebar glass-box">
+            <div class="brand-glitch small" style="color:var(--neon-red);">S-SYSTEM</div>
+            <div class="user-card">
+                <div class="avatar-ring" id="avatar-container" onclick="changeAvatar()"><i class="fas fa-user-ninja"></i></div>
+                <div class="user-meta">
+                    <span id="role-badge" class="badge">STUDENT</span>
+                    <strong id="display-name" style="font-size:14px; display:block; margin-top:5px;">...</strong>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <li class="active"><i class="fas fa-laptop-code"></i> Terminal</li>
+                <li onclick="toggleMusic()" id="music-toggle" style="color:var(--neon-blue);"><i class="fas fa-music"></i> [ BẬT NHẠC ]</li>
+                <li onclick="logout()" class="logout-link"><i class="fas fa-power-off"></i> [ NGẮT KẾT NỐI ]</li>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div id="student-view" style="display: none;">
+                <div class="stats-row" style="margin-bottom: 20px;">
+                    <div class="stat-card glass-box center-content" style="border-top: 3px solid var(--neon-gold);">
+                        <span style="color:#888;">TÀI SẢN (PP)</span>
+                        <h1 id="display-pp" class="text-gold" style="font-size: 3.5rem; margin:0;">0</h1>
+                    </div>
+                    <div class="stat-card glass-box center-content" style="border-top: 3px solid var(--neon-blue);">
+                        <span style="color:var(--neon-blue); font-weight:900;"><i class="fas fa-dice"></i> GACHA HỘP MÙ</span>
+                        <button onclick="rollGacha()" class="btn-cyber" style="margin-top:10px; background:transparent; color:var(--neon-blue); border-color:var(--neon-blue);">[ 5K PP / LẦN ]</button>
+                    </div>
+                </div>
+                <div class="grid-layout student-grid">
+                    <div class="col-main">
+                        <div class="glass-box section-card" style="margin-bottom:20px;">
+                            <div class="card-header"><h3><i class="fas fa-trophy"></i> BXH LỚP CP</h3></div>
+                            <div class="table-container" style="max-height: 200px;"><table class="cyber-table"><thead><tr><th>Hạng</th><th>Lớp</th><th>CP</th></tr></thead><tbody id="student-class-rank"></tbody></table></div>
+                        </div>
+                        <div class="glass-box section-card" style="margin-bottom:20px;">
+                            <div class="card-header"><h3><i class="fas fa-folder-open"></i> HỒ SƠ ĐIỂM SỐ</h3></div>
+                            <div class="table-container" style="max-height: 400px;"><table class="cyber-table"><thead><tr><th>Môn Học</th><th>T</th><th>G</th><th>C</th><th>Tổng</th><th>Hạng</th></tr></thead><tbody id="student-grades"></tbody></table></div>
+                        </div>
+                        <div class="glass-box section-card">
+                            <div class="card-header"><h3><i class="fas fa-crosshairs"></i> NHIỆM VỤ QUIZ</h3></div>
+                            <div class="mission-list" id="student-mission-list"></div>
+                        </div>
+                    </div>
+                    <div class="col-side">
+                        <div class="glass-box section-card center-content" style="margin-bottom:20px;"><canvas id="radarChart" style="max-height:200px;"></canvas></div>
+                        <div class="glass-box section-card" style="margin-bottom:20px; border-color:var(--neon-red);">
+                            <div class="card-header"><h3> ĐƠN TỐ CÁO</h3></div>
+                            <input type="text" id="expel-uid" placeholder="UID Đối thủ" class="cyber-input w-100" style="margin-bottom:5px;">
+                            <input type="text" id="expel-reason" placeholder="Lý do..." class="cyber-input w-100" style="margin-bottom:5px;">
+                            <button onclick="sendExpelRequest()" class="btn-outline-gold w-100">[ GỬI ]</button>
+                            <div class="table-container" style="max-height: 100px; margin-top:10px;"><table class="cyber-table"><tbody id="student-inbox"></tbody></table></div>
+                        </div>
+                        <div class="glass-box section-card">
+                            <div class="card-header"><h3> TOP 50 PP</h3></div>
+                            <div class="table-container" style="max-height: 300px;"><table class="cyber-table"><thead><tr><th>UID</th><th>Tên</th><th>PP</th></tr></thead><tbody id="top-50-students"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="teacher-view" style="display: none;">
+                <div class="grid-layout admin-grid">
+                    <div class="col-main">
+                        <div class="glass-box section-card" style="margin-bottom:20px; border-color:var(--neon-blue);">
+                            <div class="card-header"><h3> TẠO TÀI KHOẢN</h3></div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr; gap: 10px;">
+                                <input type="text" id="add-uid" placeholder="UID" class="cyber-input">
+                                <input type="text" id="add-name" placeholder="Tên" class="cyber-input">
+                                <select id="add-class-select" class="cyber-input"></select>
+                                <input type="text" id="add-pass" placeholder="Pass" class="cyber-input" value="123">
+                                <input type="number" id="add-pp" placeholder="PP" class="cyber-input" value="1000">
+                            </div>
+                            <button onclick="adminCreateUser()" class="btn-cyber w-100" style="margin-top:10px;">[ TẠO ]</button>
+                        </div>
+                        <div class="glass-box section-card" style="margin-bottom:20px;">
+                            <div class="card-header" style="justify-content: space-between;">
+                                <h3> QUẢN LÝ SINH VIÊN</h3>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <span style="font-size: 11px; color: var(--neon-blue);">SĨ SỐ: <strong id="student-count">0</strong></span>
+                                    <select id="filter-class-select" onchange="loadAdmin()" class="cyber-input" style="width: 110px; padding: 5px;"></select>
+                                </div>
+                            </div>
+                            <div class="table-container" style="max-height: 450px;"><table class="cyber-table"><thead><tr><th>UID</th><th>Tên</th><th>Pass</th><th>Y/S</th><th>Lớp</th><th>PP</th><th>Thao tác</th></tr></thead><tbody id="admin-users"></tbody></table></div>
+                        </div>
+                        <div class="glass-box section-card" style="border-color:var(--neon-gold);">
+                            <div class="card-header"><h3> KIỂM DUYỆT THƯ</h3></div>
+                            <div class="table-container" style="max-height: 250px;"><table class="cyber-table"><thead><tr><th>Từ</th><th>Bị Tố</th><th>Lý do</th><th>Hành động</th></tr></thead><tbody id="admin-messages"></tbody></table></div>
+                        </div>
+                    </div>
+                    <div class="col-side">
+                        <div class="glass-box section-card" style="margin-bottom:20px;">
+                            <h3> TẠO QUIZ</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                                <input type="text" id="q-title" placeholder="Tên" class="cyber-input" style="grid-column: span 2;">
+                                <input type="text" id="q-question" placeholder="Hỏi?" class="cyber-input" style="grid-column: span 2;">
+                                <input type="text" id="q-optA" placeholder="A" class="cyber-input"><input type="text" id="q-optB" placeholder="B" class="cyber-input">
+                                <select id="q-correct" class="cyber-input" style="grid-column: span 2;"><option value="A">Đúng A</option><option value="B">Đúng B</option></select>
+                                <input type="number" id="q-pp" placeholder="PP" class="cyber-input"><input type="number" id="q-penalty" placeholder="Phạt" class="cyber-input">
+                                <input type="number" id="q-limit" placeholder="Slot" class="cyber-input"><input type="number" id="q-max-attempts" placeholder="Lượt" class="cyber-input">
+                            </div>
+                            <button onclick="adminCreateQuest()" class="btn-cyber w-100" style="margin-top:10px;">[ ĐĂNG ]</button>
+                        </div>
+                        <div class="glass-box section-card" style="margin-bottom:20px;">
+                            <h3> CHỈNH CP LỚP</h3>
+                            <button onclick="forceInitClasses()" class="btn-mini add w-100" style="margin-bottom:5px;">🛠️ ĐỦ 16 LỚP</button>
+                            <div class="table-container" style="max-height: 350px;"><table class="cyber-table"><tbody id="admin-class-control"></tbody></table></div>
+                        </div>
+                        <div class="glass-box section-card"><h3> QUIZ ĐANG MỞ</h3><div id="admin-quest-list" class="table-container" style="max-height:150px;"></div></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="quiz-modal" class="overlay" style="display:none; z-index: 2000;">
+        <div class="glass-box login-panel" style="border-color:var(--neon-gold); text-align:left; width:500px;">
+            <h3 id="quiz-title" class="text-gold"></h3>
+            <p id="quiz-question" style="font-size:18px; margin:20px 0;"></p>
+            <p id="quiz-info" style="font-size:12px; color:#888; margin-bottom:15px;"></p>
+            <button onclick="submitQuiz('A')" class="btn-cyber w-100" style="background:rgba(0,0,0,0.5); text-align:left; margin-bottom:10px; padding:15px;"><strong class="text-gold">A.</strong> <span id="quiz-optA"></span></button>
+            <button onclick="submitQuiz('B')" class="btn-cyber w-100" style="background:rgba(0,0,0,0.5); text-align:left; margin-bottom:10px; padding:15px;"><strong class="text-gold">B.</strong> <span id="quiz-optB"></span></button>
+            <button onclick="closeQuizModal()" class="btn-outline-gold w-100">[ BỎ CHẠY ]</button>
+        </div>
+    </div>
+    <div id="view-grades-modal" class="overlay" style="display:none; z-index: 1000;">
+        <div class="glass-box login-panel" style="width:850px; max-height:85vh; display:flex; flex-direction:column; padding:30px;">
+            <h3 class="text-gold">[ HỒ SƠ ĐIỂM CHI TIẾT ]</h3>
+            <p id="view-grades-student-name" class="text-blue" style="margin-bottom:15px;"></p>
+            <div class="table-container" style="flex:1; overflow-y:auto; border:1px solid #333; margin:15px 0;">
+                <table class="cyber-table"><thead><tr><th>Kỳ</th><th>Môn</th><th>T</th><th>G</th><th>C</th><th>Tổng</th><th>Lưu</th></tr></thead><tbody id="admin-view-grades-body"></tbody></table>
+            </div>
+            <button onclick="closeViewGradesModal()" class="btn-cyber w-100">[ ĐÓNG ]</button>
+        </div>
+    </div>
+    <div id="subject-modal" class="overlay" style="display:none; z-index: 1000;">
+        <div class="glass-box login-panel" style="width:450px;">
+            <h3 class="text-gold">[ NHẬP ĐIỂM MÔN MỚI ]</h3>
+            <div style="display:flex; gap:10px; margin-bottom:10px;"><select id="subj-year" class="cyber-input w-100"><option value="1">Năm 1</option><option value="2">Năm 2</option><option value="3">Năm 3</option><option value="4">Năm 4</option></select><select id="subj-sem" class="cyber-input w-100"><option value="1">Kỳ 1</option><option value="2">Kỳ 2</option></select></div>
+            <input type="text" id="subj-name" placeholder="Tên môn" class="cyber-input w-100" style="margin-bottom:10px;">
+            <div style="display:flex; gap:10px; margin-bottom:20px;"><input type="number" id="subj-bth" placeholder="T" class="cyber-input"><input type="number" id="subj-gk" placeholder="G" class="cyber-input"><input type="number" id="subj-ck" placeholder="C" class="cyber-input"></div>
+            <button onclick="adminSaveSubject()" class="btn-cyber w-100">[ LƯU ]</button>
+            <button onclick="closeSubjectModal()" class="btn-cyber w-100" style="background:none;">[ HỦY ]</button>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
