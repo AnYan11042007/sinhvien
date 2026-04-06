@@ -11,7 +11,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Các biến toàn cục
 let activeQuizId = null;
 let quizTimerInterval = null;
 let myCurrentPvPRoomId = null;
@@ -46,12 +45,12 @@ window.toggleMusic = () => {
 };
 
 window.switchTab = (tab) => {
-    document.getElementById('nav-academic').classList.remove('active');
-    document.getElementById('nav-casino').classList.remove('active');
-    document.getElementById('tab-academic').style.display = 'none';
-    document.getElementById('tab-casino').style.display = 'none';
-    document.getElementById(`nav-${tab}`).classList.add('active');
-    document.getElementById(`tab-${tab}`).style.display = 'grid';
+    ['academic', 'casino', 'bank'].forEach(t => {
+        if(document.getElementById(`nav-${t}`)) document.getElementById(`nav-${t}`).classList.remove('active');
+        if(document.getElementById(`tab-${t}`)) document.getElementById(`tab-${t}`).style.display = 'none';
+    });
+    if(document.getElementById(`nav-${tab}`)) document.getElementById(`nav-${tab}`).classList.add('active');
+    if(document.getElementById(`tab-${tab}`)) document.getElementById(`tab-${tab}`).style.display = 'grid';
 };
 
 window.login = async () => {
@@ -82,7 +81,7 @@ if (uid) {
 }
 
 // ==========================================
-// 🚀 CORE TẢI DỮ LIỆU (KHÔNG BỊ CHỒNG CHÉO BUG)
+// 🚀 CORE TẢI DỮ LIỆU
 // ==========================================
 function loadSystem() {
     if(isSystemLoaded) return;
@@ -104,33 +103,102 @@ function loadSystem() {
         if(u.role === 'TEACHER') { 
             document.getElementById('teacher-view').style.display = 'block'; 
             document.getElementById('nav-academic').style.display = 'none';
+            document.getElementById('nav-bank').style.display = 'none';
             document.getElementById('nav-casino').style.display = 'none';
         } else { 
             document.getElementById('student-view').style.display = 'block'; 
             document.getElementById('nav-academic').style.display = 'flex';
+            document.getElementById('nav-bank').style.display = 'flex';
             document.getElementById('nav-casino').style.display = 'flex';
             document.getElementById('display-pp').innerText = (u.pp || 0).toLocaleString();
             renderStudentGrades(u);
         }
     });
 
-    // 2. Tải danh sách Lớp
+    // 2. Lớp
     onValue(ref(db, 'classes'), snap => renderClasses(snap.val() || {}));
 
-    // 3. Tải danh sách toàn bộ Sinh Viên (Cho Admin và Top 50)
+    // 3. Toàn bộ Users
     onValue(ref(db, 'users'), snap => renderAllUsers(snap.val() || {}));
 
-    // 4. Tải Hệ thống QUIZ
+    // 4. QUIZ
     onValue(ref(db, 'quests'), snap => renderQuests(snap.val() || {}));
 
-    // 5. Tải Messages
-    onValue(ref(db, 'messages'), snap => renderMessages(snap.val() || {}));
-
-    // 6. Tải Phòng PvP (Đồng bộ Realtime lập tức)
+    // 5. PVP
     onValue(ref(db, 'pvp_rooms'), snap => renderPvPRooms(snap.val() || {}));
+
+    // 6. LỊCH SỬ GIAO DỊCH (NEW)
+    onValue(ref(db, 'transactions'), snap => {
+        const txs = snap.val() || {};
+        let arr = Object.keys(txs).map(k => ({id:k, ...txs[k]})).sort((a,b) => b.timestamp - a.timestamp);
+        
+        let hStudent = "";
+        let hAdmin = "";
+        
+        arr.forEach(tx => {
+            const amtStr = `<strong class="text-gold">${tx.amount.toLocaleString()} PP</strong>`;
+            
+            // Admin View
+            hAdmin += `<tr><td>${tx.time}</td><td><span class="text-blue">${tx.senderName}</span> (${tx.sender})</td><td><span class="text-red">${tx.receiverName}</span> (${tx.receiver})</td><td>${amtStr}</td><td>${tx.message}</td></tr>`;
+            
+            // Student View
+            if(tx.sender === uid || tx.receiver === uid) {
+                const isSent = tx.sender === uid;
+                const typeHtml = isSent ? `<span style="color:#ff4500;">Chuyển đi <i class="fas fa-arrow-right"></i></span>` : `<span style="color:#4ade80;">Nhận về <i class="fas fa-arrow-left"></i></span>`;
+                const partner = isSent ? `${tx.receiverName} (${tx.receiver})` : `${tx.senderName} (${tx.sender})`;
+                
+                hStudent += `<tr><td>${tx.time}</td><td>${typeHtml}</td><td>${partner}</td><td>${amtStr}</td><td>${tx.message}</td></tr>`;
+            }
+        });
+        
+        if(document.getElementById('admin-transactions')) document.getElementById('admin-transactions').innerHTML = hAdmin || `<tr><td colspan="5" style="text-align:center; color:#888;">Chưa có giao dịch nào</td></tr>`;
+        if(document.getElementById('student-transactions')) document.getElementById('student-transactions').innerHTML = hStudent || `<tr><td colspan="5" style="text-align:center; color:#888;">Chưa có giao dịch nào</td></tr>`;
+    });
 }
 
-// --- CÁC HÀM RENDER GIAO DIỆN CON ---
+// ==========================================
+// 💸 CHUYỂN TIỀN PP (NGÂN HÀNG)
+// ==========================================
+window.transferPP = async () => {
+    const tUid = document.getElementById('transfer-uid').value.trim();
+    const amt = parseInt(document.getElementById('transfer-amount').value);
+    const msg = document.getElementById('transfer-msg').value.trim() || 'Không có lời nhắn';
+    
+    if(!tUid || isNaN(amt) || amt <= 0) return window.showResult("LỖI", "Thông tin chuyển khoản không hợp lệ!", false);
+    if(tUid === uid) return window.showResult("LỖI", "Không thể tự chuyển tiền cho chính mình!", false);
+    
+    const mySnap = await get(ref(db, `users/${uid}`));
+    const myData = mySnap.val();
+    if((Number(myData.pp)||0) < amt) return window.showResult("SỐ DƯ KHÔNG ĐỦ", "Bạn không đủ PP để chuyển!", false);
+    
+    const targetSnap = await get(ref(db, `users/${tUid}`));
+    if(!targetSnap.exists()) return window.showResult("LỖI", "UID Người nhận không tồn tại!", false);
+    const targetData = targetSnap.val();
+    
+    // Cập nhật số dư 2 bên
+    await update(ref(db, `users/${uid}`), { pp: (Number(myData.pp)||0) - amt });
+    await update(ref(db, `users/${tUid}`), { pp: (Number(targetData.pp)||0) + amt });
+    
+    // Ghi lịch sử giao dịch
+    const txId = `TX_${Date.now()}`;
+    const timeStr = new Date().toLocaleString('vi-VN');
+    await set(ref(db, `transactions/${txId}`), {
+        sender: uid,
+        senderName: myData.name,
+        receiver: tUid,
+        receiverName: targetData.name,
+        amount: amt,
+        message: msg,
+        time: timeStr,
+        timestamp: Date.now()
+    });
+    
+    window.showResult("CHUYỂN KHOẢN THÀNH CÔNG", `Đã chuyển ${amt.toLocaleString()} PP cho ${targetData.name}!`, true);
+    document.getElementById('transfer-amount').value = '';
+    document.getElementById('transfer-msg').value = '';
+};
+
+// --- CÁC HÀM RENDER ---
 function renderStudentGrades(u) {
     const tb = document.getElementById('student-grades'); if(!tb) return;
     tb.innerHTML = '';
@@ -159,12 +227,10 @@ function renderAllUsers(us) {
     let arr = [];
     for(let id in us) if(us[id].role === 'STUDENT') arr.push({id, ...us[id]});
     
-    // Top 50 Casino
     arr.sort((a,b) => (Number(b.pp)||0) - (Number(a.pp)||0));
     let hTop = ""; arr.slice(0, 50).forEach((s) => hTop += `<tr><td>${s.id}</td><td>${s.name}</td><td class="text-gold" style="font-weight:bold; font-size:15px;">${(Number(s.pp)||0).toLocaleString()}</td></tr>`);
     if(document.getElementById('top-50-students')) document.getElementById('top-50-students').innerHTML = hTop;
 
-    // Admin Table
     const filter = window.adminFilterClass;
     let hAdmin = ""; let count = 0;
     
@@ -175,73 +241,43 @@ function renderAllUsers(us) {
         count++;
         hAdmin += `<tr><td>${u.id}</td><td><input type="text" value="${u.name}" onchange="window.upU('${u.id}','name',this.value)" class="cyber-input" style="width:70px;"></td><td><input type="text" value="${u.pass}" onchange="window.upU('${u.id}','pass',this.value)" class="cyber-input" style="width:40px;"></td><td>Y:${u.year} S:${u.sem}</td><td><select onchange="window.upC('${u.id}',this.value)" class="cyber-input">${genClassOptions(u.classKey)}</select></td><td>${(Number(u.pp)||0).toLocaleString()}</td><td><button onclick="window.addPP('${u.id}')" class="btn-mini add">+PP</button><button onclick="window.subPP('${u.id}')" class="btn-mini sub">-PP</button><button onclick="window.openGrades('${u.id}','${u.name}')" class="btn-mini add">XEM</button><button onclick="window.delU('${u.id}')" class="btn-mini del">X</button></td></tr>`;
     });
-    const adminUsersElem = document.getElementById('admin-users');
-    if (adminUsersElem) adminUsersElem.innerHTML = hAdmin;
+    if (document.getElementById('admin-users')) document.getElementById('admin-users').innerHTML = hAdmin;
     if (document.getElementById('student-count')) document.getElementById('student-count').innerText = count;
 }
+window.loadAdmin = () => { renderAllUsers(); }; 
 
-window.loadAdmin = () => { renderAllUsers(); }; // Hỗ trợ nút Lọc lớp
-
-// 🎯 FIX QUIZ CHÍNH XÁC: Render cho cả Admin và Học Sinh
 function renderQuests(qs) {
-    let hStudent = "";
-    let hAdmin = "";
-
+    let hStudent = ""; let hAdmin = "";
     for(let id in qs) {
         const q = qs[id];
         const dLine = q.deadline && q.deadline !== 'Không có' ? formatDate(q.deadline) : 'Vô thời hạn';
         const isExpired = q.deadline && q.deadline !== 'Không có' && new Date() > new Date(q.deadline + "T23:59:59");
         
-        // ADMIN VIEW
         hAdmin += `<div style="display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid #333; background: rgba(255,255,255,0.02); margin-bottom:5px; border-radius:8px;">
             <div><strong class="text-green">${q.title}</strong><br><small style="color:#aaa;">Thưởng: ${q.rewardPP} PP | Hạn: ${dLine}</small></div>
             <button onclick="window.delQ('${id}')" class="btn-mini del" style="height:fit-content; padding:8px 12px;"><i class="fas fa-trash"></i></button>
         </div>`;
 
-        // STUDENT VIEW
         if(q.status === 'OPEN') {
             const maxAtt = parseInt(q.maxAttempts) || 1;
             const att = q.attempts?.[uid] || 0;
             const canPlay = !isExpired && att < maxAtt;
 
             let btnHtml = '';
-            if (isExpired) {
-                btnHtml = `<button class="btn-cyber" style="background:#333; border-color:#555; color:#888; cursor:not-allowed;">[ HẾT HẠN ]</button>`;
-            } else if (att >= maxAtt) {
-                btnHtml = `<button class="btn-cyber" style="background:rgba(0,255,128,0.1); border-color:var(--neon-green); color:var(--neon-green); cursor:not-allowed;">[ ĐÃ HOÀN THÀNH ]</button>`;
-            } else {
-                btnHtml = `<button onclick="openQuiz('${id}')" class="btn-cyber glow-pulse" style="border-color:var(--neon-blue); color:var(--neon-blue);">[ GIẢI MÃ NHẬN THƯỞNG ]</button>`;
-            }
+            if (isExpired) btnHtml = `<button class="btn-cyber" style="background:#333; border-color:#555; color:#888; cursor:not-allowed;">[ HẾT HẠN ]</button>`;
+            else if (att >= maxAtt) btnHtml = `<button class="btn-cyber" style="background:rgba(0,255,128,0.1); border-color:var(--neon-green); color:var(--neon-green); cursor:not-allowed;">[ ĐÃ HOÀN THÀNH ]</button>`;
+            else btnHtml = `<button onclick="openQuiz('${id}')" class="btn-cyber glow-pulse" style="border-color:var(--neon-blue); color:var(--neon-blue);">[ GIẢI MÃ NHẬN THƯỞNG ]</button>`;
 
             hStudent += `<div class="mission-item" style="border-left: 4px solid ${canPlay ? 'var(--neon-blue)' : '#555'};">
-                <div>
-                    <h4 style="margin:0; color:${canPlay ? '#fff' : '#888'}"><i class="fas fa-question-circle"></i> ${q.title}</h4>
-                    <small style="color:#aaa;">Thưởng: <b class="text-gold">+${q.rewardPP} PP</b> | Phạt: <b class="text-red">-${q.penaltyPP} PP</b></small><br>
-                    <small style="color:#aaa;">Lượt: ${att}/${maxAtt} | Hạn: ${dLine}</small>
-                </div>
-                ${btnHtml}
-            </div>`;
+                <div><h4 style="margin:0; color:${canPlay ? '#fff' : '#888'}"><i class="fas fa-question-circle"></i> ${q.title}</h4>
+                <small style="color:#aaa;">Thưởng: <b class="text-gold">+${q.rewardPP} PP</b> | Phạt: <b class="text-red">-${q.penaltyPP} PP</b></small><br>
+                <small style="color:#aaa;">Lượt: ${att}/${maxAtt} | Hạn: ${dLine}</small></div>${btnHtml}</div>`;
         }
     }
-    
     if(document.getElementById('admin-quest-list')) document.getElementById('admin-quest-list').innerHTML = hAdmin || '<p style="color:#888; text-align:center;">Chưa có Quiz nào!</p>';
     if(document.getElementById('student-mission-list')) document.getElementById('student-mission-list').innerHTML = hStudent || '<p style="color:#888; text-align:center;">Hôm nay không có bài Quiz nào!</p>';
 }
 
-function renderMessages(ms) {
-    let hAdmin = ""; let hStudent = "";
-    for(let id in ms) {
-        if(ms[id].status === 'PENDING') hAdmin += `<tr><td>${ms[id].senderName}</td><td>${ms[id].targetUid}</td><td>${ms[id].reason}</td><td><button onclick="window.replyM('${id}','APPROVED')" class="btn-mini add">V</button><button onclick="window.replyM('${id}','REJECTED')" class="btn-mini del">X</button></td></tr>`;
-        if(ms[id].senderUid === uid) {
-            let col = ms[id].status === 'APPROVED' ? '#4ade80' : (ms[id].status === 'REJECTED' ? '#ff004c' : '#ffd700');
-            hStudent += `<tr><td>Tố cáo ${ms[id].targetUid}</td><td style="color:${col};font-weight:bold;">${ms[id].status}</td><td>${ms[id].adminReply||'...'}</td></tr>`;
-        }
-    }
-    if(document.getElementById('admin-messages')) document.getElementById('admin-messages').innerHTML = hAdmin;
-    if(document.getElementById('student-inbox')) document.getElementById('student-inbox').innerHTML = hStudent;
-}
-
-// ⚔️ RENDER ĐẤU TRƯỜNG PVP (CẬP NHẬT TỨC THỜI CỰC MƯỢT)
 function renderPvPRooms(rooms) {
     let liveHtml = ""; let modalHtml = ""; let amIPlaying = false;
 
@@ -252,7 +288,7 @@ function renderPvPRooms(rooms) {
         if(r.status === 'WAITING') {
             liveHtml += `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding: 8px 0;">
                             <span style="font-size:12px;"><i class="fas fa-fire text-red"></i> <strong class="text-blue">${r.creatorName}</strong> gạ kèo <strong class="text-gold">${r.bet.toLocaleString()} PP</strong>!</span>
-                            ${r.creator === uid ? `<span style="color:#888;font-size:11px;">[Phòng Bạn]</span>` : `<button onclick="pvpJoin('${k}')" class="btn-mini add" style="padding:6px 12px;">CHIẾN</button>`}
+                            ${r.creator === uid ? `<span style="color:#888;font-size:11px;">[Phòng Của Bạn]</span>` : `<button onclick="pvpJoin('${k}')" class="btn-mini add" style="padding:6px 12px;">CHIẾN</button>`}
                          </div>`;
 
             if(r.creator === uid) {
@@ -314,7 +350,6 @@ function renderPvPRooms(rooms) {
     }
     
     if (document.getElementById('live-pvp-feed')) document.getElementById('live-pvp-feed').innerHTML = liveHtml || `<span style="color:#555; font-size:12px; font-style:italic;">Hiện chưa có đại gia nào lên sàn...</span>`;
-
     if (!amIPlaying) {
         if(document.getElementById('pvp-action-area')) document.getElementById('pvp-action-area').style.display = 'block';
         if(document.getElementById('pvp-battle-area')) document.getElementById('pvp-battle-area').style.display = 'none';
@@ -322,18 +357,13 @@ function renderPvPRooms(rooms) {
     }
 }
 
-
 // ==========================================
 // 🛠️ ADMIN TOOLS & FIX LỖI TẠO QUIZ (AN TOÀN TUYỆT ĐỐI)
 // ==========================================
 window.adminCreateQuest = async () => {
-    const t = document.getElementById('q-title').value;
-    const q = document.getElementById('q-question').value;
-    const a = document.getElementById('q-optA').value;
-    const b = document.getElementById('q-optB').value;
-    const c = document.getElementById('q-correct').value;
+    const t = document.getElementById('q-title').value, q = document.getElementById('q-question').value;
+    const a = document.getElementById('q-optA').value, b = document.getElementById('q-optB').value, c = document.getElementById('q-correct').value;
     
-    // FIX TẬN GỐC LỖI TẠO QUIZ: Nếu để trống ô, mặc định sẽ là 0 hoặc 1.
     const pp = parseInt(document.getElementById('q-pp').value) || 0;
     const pn = parseInt(document.getElementById('q-penalty').value) || 0;
     const l = parseInt(document.getElementById('q-limit').value) || 999;
@@ -341,9 +371,7 @@ window.adminCreateQuest = async () => {
     const tm = parseInt(document.getElementById('q-time').value) || 0;
     const dl = document.getElementById('q-deadline').value || 'Không có';
     
-    if(!t || !q || !a || !b) {
-        return window.showResult("LỖI!", "Giáo viên vui lòng điền ĐẦY ĐỦ Tên, Câu hỏi và Đáp án!", false);
-    }
+    if(!t || !q || !a || !b) return window.showResult("LỖI!", "Giáo viên vui lòng điền ĐẦY ĐỦ Tên, Câu hỏi và Đáp án!", false);
     
     await set(ref(db, `quests/Q_${Date.now()}`), { 
         title:t, question:q, optA:a, optB:b, correctOpt:c, rewardPP:pp, penaltyPP:pn, 
@@ -351,30 +379,23 @@ window.adminCreateQuest = async () => {
     }); 
     
     window.showResult("THÀNH CÔNG", "ĐÃ ĐĂNG QUIZ MỚI LÊN HỆ THỐNG!", true);
-    
-    // Reset Form
-    document.getElementById('q-title').value = '';
-    document.getElementById('q-question').value = '';
-    document.getElementById('q-optA').value = '';
-    document.getElementById('q-optB').value = '';
+    document.getElementById('q-title').value = ''; document.getElementById('q-question').value = '';
 };
 
+// CÁC HÀM ADMIN KHÁC (Đã Fix Sạch Lỗi)
 window.forceInitClasses = async () => { const ups = {}; for(let y=1;y<=4;y++) ['A','B','C','D'].forEach(b => { const id=`Y${y}_${b}`; ups[`classes/${id}`] = { year:y, name:`${y}-${b}`, cp:1000 }; }); await update(ref(db, '/'), ups); window.showResult("THÀNH CÔNG", "ĐÃ RESET CHUẨN HÓA 16 LỚP!", true); };
 window.addPP = async (id) => { const amt = prompt("CỘNG PP:"); if(amt && !isNaN(amt)) { const s = await get(ref(db, `users/${id}`)); await update(ref(db, `users/${id}`), { pp: (Number(s.val().pp) || 0) + parseInt(amt) }); } };
 window.subPP = async (id) => { const amt = prompt("TRỪ PP:"); if(amt && !isNaN(amt)) { const s = await get(ref(db, `users/${id}`)); await update(ref(db, `users/${id}`), { pp: Math.max(0, (Number(s.val().pp) || 0) - parseInt(amt)) }); } };
 window.upU = (id, k, v) => update(ref(db, `users/${id}`), { [k]: v });
-window.delU = id => { if(confirm("Bạn có chắc chắn muốn Xóa sinh viên này?")) remove(ref(db, `users/${id}`)); };
+window.delU = id => { if(confirm("Xóa sinh viên này?")) remove(ref(db, `users/${id}`)); };
 window.upCP = (id, v) => update(ref(db, `classes/${id}`), { cp: parseInt(v) });
-window.delQ = id => { if(confirm("Xác nhận xóa bài Quiz này?")) remove(ref(db, `quests/${id}`)); };
+window.delQ = id => { if(confirm("Xóa bài Quiz này?")) remove(ref(db, `quests/${id}`)); };
 window.upC = async (id, ck) => { const y = parseInt(ck[1]), block = ck.split('_')[1], name = `${y}-${block}`; await update(ref(db, `users/${id}`), { classKey: ck, class: name, year: y }); };
 window.changeAvatar = () => { const url = prompt("Nhập Link ảnh (URL):"); if(url) update(ref(db, `users/${uid}`), { avatar: url }); };
 window.changeTeacherName = () => { const n = prompt("Tên giáo viên mới:"); if(n) update(ref(db, `users/${uid}`), { name: n }); };
 window.closeQuizModal = () => { if(quizTimerInterval) clearInterval(quizTimerInterval); document.getElementById('quiz-modal').style.display = 'none'; };
 window.closeViewGradesModal = () => document.getElementById('view-grades-modal').style.display = 'none';
-window.sendExpelRequest = async () => { const t = document.getElementById('expel-uid').value, r = document.getElementById('expel-reason').value; if(!t||!r) return window.showResult("LỖI", "Vui lòng nhập UID và Lý do!", false); await set(ref(db, `messages/msg_${Date.now()}`), { senderUid: uid, senderName: (await get(ref(db, `users/${uid}`))).val().name, targetUid: t, reason: r, status: 'PENDING', adminReply: '' }); window.showResult("ĐÃ GỬI", "Gửi đơn tố cáo thành công! Chờ Admin duyệt.", true); };
-window.replyM = async (id, st) => { const r = prompt("Nhập lý do duyệt/từ chối:"); if(r!==null) await update(ref(db, `messages/${id}`), { status: st, adminReply: r }); };
 
-// LÀM BÀI QUIZ (HỌC SINH)
 window.openQuiz = async id => {
     const s = await get(ref(db, `quests/${id}`)); const q = s.val();
     if(!q) return;
@@ -404,7 +425,7 @@ window.submitQuiz = async opt => {
     if(!q) return window.closeQuizModal();
 
     const att = q.attempts?.[uid] || 0; 
-    await update(ref(db, `quests/${activeQuizId}/attempts`), { [uid]: att + 1 }); // Lưu số lượt làm bài
+    await update(ref(db, `quests/${activeQuizId}/attempts`), { [uid]: att + 1 }); 
     
     const uS = await get(ref(db, `users/${uid}`)); const u = uS.val(); const currentPP = Number(u.pp) || 0;
     
@@ -525,7 +546,7 @@ window.pvpClaimReward = async (roomId, reward) => {
 };
 
 // ==========================================
-// 🎲 LAS VEGAS ZONE (CORE ENGINE & 40 GAMES ĐÃ ĐƯỢC NERF)
+// 🎲 LAS VEGAS ZONE (CORE ENGINE & GAMES)
 // ==========================================
 async function executeBet(gameName, logicCallback) {
     let bet = prompt(`[ ${gameName} ]\nNhập số PP bạn muốn đặt cược:`);
@@ -534,7 +555,6 @@ async function executeBet(gameName, logicCallback) {
 
     const snap = await get(ref(db, `users/${uid}`));
     const u = snap.val(); const currentPP = Number(u.pp) || 0;
-    
     if(currentPP < bet) return window.showResult("NGHÈO", `Bạn chỉ có ${currentPP.toLocaleString()} PP. Không đủ cược!`, false);
 
     const res = await logicCallback(bet, currentPP);
@@ -542,7 +562,6 @@ async function executeBet(gameName, logicCallback) {
 
     const { payout, message, title, isWin } = res;
     
-    // Cộng trừ tiền (Lấy fresh database lần cuối tránh lag)
     const freshSnap = await get(ref(db, `users/${uid}`));
     const freshPP = Number(freshSnap.val().pp) || 0;
 
@@ -550,7 +569,33 @@ async function executeBet(gameName, logicCallback) {
     window.showResult(title, `${message}\n\n=> PP HIỆN TẠI: ${(freshPP + payout).toLocaleString()}`, isWin);
 }
 
-// 5 GAME ĐẶC BIỆT TƯƠNG TÁC
+// 2 GAME DÀNH CHO CON GÁI (CUTE & TAROT)
+window.playClawMachine = () => executeBet("GẮP GẤU BÔNG", async (bet) => {
+    const r = Math.random();
+    if(r < 0.05) return { payout: bet * 10, message: `Trời ơi!!! Bạn gắp được 🦄 KỲ LÂN NGÂN HÀ (Siêu Hiếm)!\nThắng ${(bet*10).toLocaleString()} PP!`, title: "BÀN TAY VÀNG", isWin: true };
+    if(r < 0.35) return { payout: bet * 2, message: `Tuyệt vời! Bạn gắp được 🐻 Gấu Teddy dễ thương!\nThắng ${(bet*2).toLocaleString()} PP!`, title: "GẮP THÀNH CÔNG", isWin: true };
+    return { payout: -bet, message: `Tuột càng mất rồi! Con gấu rơi phịch xuống lỗ.\nBạn mất ${bet.toLocaleString()} PP!`, title: "TUỘT CÀNG", isWin: false };
+});
+
+window.playTarot = () => executeBet("BÓI TAROT", async (bet) => {
+    let choice = prompt("Có 3 lá bài đang úp (1, 2, 3).\nBạn chọn lật lá bài số mấy?");
+    if(!['1','2','3'].includes(choice)) return null;
+    const cards = [
+        { name: "THE SUN ☀️", mult: 5, msg: "Tương lai rực rỡ, tài lộc dồi dào!" },
+        { name: "THE LOVERS 💕", mult: 2, msg: "Tình duyên chớm nở, may mắn nhân đôi!" },
+        { name: "THE TOWER 🌩️", mult: 0, msg: "Tai họa giáng xuống, tiền tài tiêu tán!" },
+        { name: "DEATH 💀", mult: 0, msg: "Kết thúc đau thương, mất sạch tiền cược!" },
+        { name: "WHEEL OF FORTUNE 🎡", mult: 1.5, msg: "Vòng quay định mệnh, sinh lời vừa phải." }
+    ];
+    const drawn = cards[Math.floor(Math.random() * cards.length)];
+    const profit = Math.floor(bet * drawn.mult) - bet;
+    
+    if (profit > 0) return { payout: profit, message: `Bạn đã lật trúng lá ${drawn.name}\n${drawn.msg}\nNhận được ${(profit + bet).toLocaleString()} PP!`, title: "THÔNG ĐIỆP VŨ TRỤ", isWin: true };
+    if (profit === 0) return { payout: 0, message: `Bạn đã lật trúng lá ${drawn.name}\n${drawn.msg}\nHòa vốn!`, title: "BÌNH YÊN", isWin: true };
+    return { payout: profit, message: `Bạn đã lật trúng lá ${drawn.name}\n${drawn.msg}\nMất ${bet.toLocaleString()} PP!`, title: "VẬN ĐEN", isWin: false };
+});
+
+// CÁC GAME INTERACTIVE
 window.playCrypto = () => executeBet("ĐẦU TƯ CRYPTO", async (bet) => {
     let currentVal = bet, month = 1, crashed = false;
     while(month <= 5) {
@@ -615,13 +660,12 @@ window.playAuction = () => executeBet("ĐẤU GIÁ RƯƠNG", async (bet) => {
 });
 
 
-// 35 GAME KHÁC (TỈ LỆ THẮNG BỊ GIẢM ĐỂ "HÚT MÁU")
+// CÁC GAME ĐÃ NERF 
 window.rollGacha = async () => { const snap = await get(ref(db, `users/${uid}`)); const c = Number(snap.val().pp) || 0; if(c < 5000) return window.showResult("NGHÈO", "Bạn không đủ 5,000 PP!", false); const r = Math.random()*100; let n = c - 5000, m = "Trắng tay... Bạn mất 5,000 PP 💀", t = "BAY MÀU", win = false; if(r > 98) { n += 50000; m = "Trúng 50,000 PP 🎉"; t = "JACKPOT!!!"; win = true; } else if(r > 88) { n += 10000; m = "Lời 10,000 PP 💵"; t = "X2 TÀI SẢN"; win = true; } await update(ref(db, `users/${uid}`), { pp: n }); window.showResult(t, m, win); };
 window.playSlot = () => executeBet("SLOT", (b) => { const s=['🍒','🍋','🔔','💎','🍉','💀','💩','🎱']; const r1=s[Math.floor(Math.random()*8)], r2=s[Math.floor(Math.random()*8)], r3=s[Math.floor(Math.random()*8)], res=`[ ${r1} | ${r2} | ${r3} ]`; if(r1===r2&&r2===r3) return {payout:b*10, message:`${res}\nNỔ HŨ X10! Trúng ${(b*10).toLocaleString()} PP!`, title:"JACKPOT", isWin:true}; if(r1===r2||r2===r3||r1===r3) return {payout:b, message:`${res}\nTRÚNG CẶP! X2 Tài sản!`, title:"THẮNG", isWin:true}; return {payout:-b, message:`${res}\nTRẬT LẤT! Mất ${b.toLocaleString()} PP!`, title:"THUA", isWin:false}; });
 window.playCocktail = () => executeBet("COCKTAIL ĐỘC", (b) => { const p = Math.floor(Math.random()*6); if(p===0 || p===1) return {payout:-b, message:`LY CÓ ĐỘC! (Tỉ lệ chết 33%)\nMất sạch ${b.toLocaleString()} PP!`, title:"TỬ VONG", isWin:false}; return {payout:Math.floor(b*0.2), message:`An toàn! Lời ${(Math.floor(b*0.2)).toLocaleString()} PP!`, title:"NGON MIỆNG", isWin:true}; });
 window.playDarts = () => executeBet("PHI TIÊU", (b) => { const s = Math.floor(Math.random()*100)+1; if(s>96) return {payout:b*4, message:`Hồng tâm (${s}đ)! Trúng ${(b*4).toLocaleString()} PP!`, title:"XUẤT THẦN", isWin:true}; if(s>60) return {payout:b, message:`Trúng bảng (${s}đ)! X2 tiền!`, title:"THẮNG", isWin:true}; return {payout:-b, message:`Phóng trượt (${s}đ)! Mất ${b.toLocaleString()} PP!`, title:"TRƯỢT", isWin:false}; });
 window.playRussianRoulette = () => executeBet("CÒ QUAY NGA", (b) => { if(Math.random()<0.25) return {payout:-b, message:`ĐÙNG!!! Súng nổ (25% chết)!\nMất sạch ${b.toLocaleString()} PP.`, title:"CHẾT RỒI", isWin:false}; return {payout:b*4, message:`Súng không nổ! Sống sót nhận ${(b*4).toLocaleString()} PP!`, title:"BẢN LĨNH", isWin:true}; });
-window.playXocDia = (c) => executeBet("XÓC ĐĨA", (b) => { if(Math.random()<0.1) return {payout:-b, message:`Nhà cái giở trò bịp bợm bẻ kèo!\nBạn mất trắng ${b.toLocaleString()} PP!`, title:"BỊ BỊP", isWin:false}; const rC=Array(4).fill().filter(()=>Math.random()>0.5).length, res=(rC%2===0)?'CHAN':'LE'; if(c===res) return {payout:b, message:`Mở bát: ${rC} ĐỎ (${res==='CHAN'?'CHẴN':'LẺ'}).\nThắng ${b.toLocaleString()} PP!`, title:"HÚP TIỀN", isWin:true}; return {payout:-b, message:`Mở bát: ${rC} ĐỎ.\nThua ${b.toLocaleString()} PP!`, title:"THUA SẠCH", isWin:false}; });
 window.playBaccarat = (c) => executeBet("BACCARAT", (b) => { const p=Math.floor(Math.random()*10), k=Math.floor(Math.random()*10), win=p>k?'PLAYER':(k>p?'BANKER':'TIE'); if(win==='TIE') return {payout:-(Math.floor(b*0.1)), message:`Con: ${p} | Cái: ${k}\nHÒA NHAU! Nhà cái thu 10% phế.`, title:"HÒA", isWin:false}; if(c===win) return {payout:b, message:`Con: ${p} | Cái: ${k}\nĐOÁN ĐÚNG! Thắng ${b.toLocaleString()} PP!`, title:"THẮNG", isWin:true}; return {payout:-b, message:`Con: ${p} | Cái: ${k}\nĐOÁN SAI! Thua ${b.toLocaleString()} PP!`, title:"THUA", isWin:false}; });
 window.playBlackjack = () => executeBet("BLACKJACK 21", (b) => { const gS=()=>Math.random()<0.35?22:Math.floor(Math.random()*6)+16, pS=gS(), dS=gS(); if(pS>21) return {payout:-b, message:`Bạn 22 điểm (Dễ Quắc)!\nMất ${b.toLocaleString()} PP.`, title:"QUẮC", isWin:false}; if(dS>21) return {payout:b, message:`Bạn: ${pS} | Nhà cái: Quắc!\nThắng ${b.toLocaleString()} PP.`, title:"NHÀ CÁI QUẮC", isWin:true}; if(pS===dS) return {payout:0, message:`Cùng ${pS} điểm. Hòa tiền.`, title:"HÒA", isWin:true}; if(pS>dS) return {payout:b, message:`Bạn: ${pS} | Nhà cái: ${dS}\nThắng ${b.toLocaleString()} PP!`, title:"THẮNG 21", isWin:true}; return {payout:-b, message:`Bạn: ${pS} | Nhà cái: ${dS}\nThua ${b.toLocaleString()} PP!`, title:"THUA RỒI", isWin:false}; });
 window.playBilliards = () => executeBet("BIDA", (b) => { if(Math.random()<0.25) return {payout:Math.floor(b*1.5), message:`Bi vào lỗ (Chỉ 25% trúng)!\nThắng ${(Math.floor(b*1.5)).toLocaleString()} PP!`, title:"THẮNG", isWin:true}; return {payout:-b, message:`Bi văng ra ngoài.\nThua ${b.toLocaleString()} PP!`, title:"THUA", isWin:false}; });
