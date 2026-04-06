@@ -21,6 +21,7 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-deep); 
 .brand-glitch { font-family: 'JetBrains Mono', monospace; font-size: 2.8rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; text-shadow: 3px 3px var(--neon-red), -3px -3px var(--neon-blue); }
 .brand-glitch.small { font-size: 1.6rem; text-align: center; margin-bottom: 25px; }
 
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.5); } 80% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes modalDrop { 0% { opacity: 0; transform: scale(0.9) translateY(-20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100; }
 .login-panel { padding: 40px 50px; width: 400px; text-align: center; border-top: 4px solid var(--neon-red); animation: modalDrop 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -71,24 +72,23 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-deep); 
 .cyber-table th { text-align: left; padding: 14px; color: #aaa; border-bottom: 2px solid #30363d; position: sticky; top: 0; background: rgba(5,6,8,0.9); text-transform: uppercase; font-size: 11px; z-index: 10;}
 .cyber-table td { padding: 15px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;}
 .cyber-table tr:hover td { background: rgba(255,255,255,0.03); }
-.term-group-header td { padding: 10px 12px !important; color: var(--neon-gold); font-weight: 900; background: rgba(255, 215, 0, 0.05); }
 
-.mission-list { display: flex; flex-direction: column; gap: 15px; }
-.mission-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; border-radius: 10px; border-left: 4px solid #555; background: rgba(0,0,0,0.5); transition: 0.3s; }
-.mission-item:hover { transform: translateX(5px); background: rgba(0,0,0,0.8); border-color: rgba(255,255,255,0.1); }
-
-/* --- CLUB & BAR CSS --- */
+/* --- TÙY CHỈNH NEON BAR & GAMES --- */
 .glow-pulse { animation: glowPulse 2s infinite; }
-@keyframes glowPulse { 0% { text-shadow: 0 0 10px var(--neon-red); } 50% { text-shadow: 0 0 30px var(--neon-red); } 100% { text-shadow: 0 0 10px var(--neon-red); } }
+@keyframes glowPulse { 0% { text-shadow: 0 0 10px currentColor; } 50% { text-shadow: 0 0 25px currentColor; } 100% { text-shadow: 0 0 10px currentColor; } }
 
-.casino-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; padding-top: 10px; }
-.game-card { background: rgba(10, 5, 20, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 18px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-.game-card::before { content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); opacity: 0; transition: 0.5s; pointer-events: none; }
-.game-card:hover { transform: translateY(-5px); border-color: var(--neon-pink); box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,0,255,0.1); }
-.game-card:hover::before { opacity: 1; transform: rotate(15deg); }
+.casino-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; padding-top: 10px; }
+.game-card { background: linear-gradient(145deg, rgba(20,20,30,0.9), rgba(5,5,10,0.9)); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+.game-card::before { content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%); opacity: 0; transition: 0.5s; pointer-events: none; }
+.game-card:hover { transform: translateY(-8px) scale(1.02); z-index: 2; box-shadow: 0 15px 30px rgba(0,0,0,0.8), inset 0 0 20px currentColor; border-color: currentColor; }
+.game-card:hover::before { opacity: 1; transform: rotate(25deg); }
 
-.game-card h4 { font-size: 14px; margin: 0 0 5px 0; letter-spacing: 1px; text-transform: uppercase; }
-.game-card p { font-size: 11px; color: #888; margin: 0 0 12px 0; line-height: 1.4; height: 30px;}
-.game-card .btn-cyber { padding: 8px; font-size: 11px; background: rgba(0,0,0,0.8); }
+.game-card h4 { font-size: 16px; margin: 0 0 8px 0; letter-spacing: 1px; text-transform: uppercase; font-weight: 900; }
+.game-card p { font-size: 12px; color: #aaa; margin: 0 0 15px 0; line-height: 1.5; height: 36px;}
+.game-card .btn-cyber { padding: 10px; font-size: 12px; background: rgba(0,0,0,0.8); border-width: 2px; }
 
-.pvp-card { background: linear-gradient(135deg, rgba(255,0,60,0.1) 0%, rgba(255,0,255,0.1) 100%); border-color: var(--neon-pink); grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+.pvp-card { background: linear-gradient(135deg, rgba(255,0,60,0.15) 0%, rgba(255,0,255,0.15) 100%); border: 2px solid var(--neon-pink); grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 25px 30px; }
+.pvp-card:hover { box-shadow: 0 0 30px rgba(255,0,255,0.4), inset 0 0 20px rgba(255,0,255,0.2); }
+
+.room-item { background: rgba(0,0,0,0.5); border: 1px solid #444; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+.room-item:hover { border-color: var(--neon-gold); background: rgba(255,215,0,0.1); }
