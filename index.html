@@ -110,6 +110,7 @@
                         </div>
 
                         <div class="casino-grid">
+                            
                             <div class="game-card pvp-card" style="color:var(--neon-pink);">
                                 <div>
                                     <h3 class="text-pink glow-pulse" style="margin: 0 0 10px 0; font-size:24px;"><i class="fas fa-bolt"></i> NEON ARENA (PvP) ⚔️</h3>
@@ -118,12 +119,25 @@
                                 <button onclick="openPvPModal()" class="btn-cyber" style="border-color:var(--neon-pink); color:var(--neon-pink); padding: 18px 35px; font-size:16px; background:rgba(255,0,255,0.1);">[ VÀO VÕ ĐÀI ]</button>
                             </div>
 
+                            <div class="game-card tl-banner" style="color:var(--neon-gold);">
+                                <div>
+                                    <h3 class="text-gold glow-pulse" style="margin: 0 0 10px 0; font-size:24px;"><i class="fas fa-spade"></i> SÒNG TIẾN LÊN VIP 🃏</h3>
+                                    <p style="font-size: 13px; color:#ddd; margin:0; height:auto;">Solo 2-4 người. Kẻ chiến thắng ẵm trọn sòng. Hỗ trợ đếm ngược 30s cực gắt!</p>
+                                </div>
+                                <button onclick="openTienLenModal()" class="btn-cyber" style="border-color:var(--neon-gold); color:var(--neon-gold); padding: 18px 35px; font-size:16px; background:rgba(255,215,0,0.1);">[ VÀO SÒNG BÀI ]</button>
+                            </div>
+
+                            <div class="game-card" style="color:var(--neon-gold); border:2px solid var(--neon-gold); box-shadow:0 0 15px rgba(255,215,0,0.3);">
+                                <h4 class="text-gold glow-pulse">📈 TRADING CRYPTO</h4>
+                                <p>Mua Coin. Gồng lãi nến xanh. Úp sọt mất trắng!</p>
+                                <button onclick="openCryptoGame()" class="btn-cyber w-100" style="border-color:var(--neon-gold); color:var(--neon-gold);">[ ĐẦU TƯ LIỀN ]</button>
+                            </div>
+
                             <div class="game-card" style="color:#00ff80; border:2px solid #00ff80; box-shadow:0 0 15px rgba(0,255,128,0.3);"><h4 class="text-green glow-pulse">⚽ CÁ CƯỢC BÓNG ĐÁ</h4><p>Chọn Xanh/Đỏ. Sân cỏ 12 cầu thủ chạy 1 phút. Thắng x2!</p><button onclick="openFootballGame()" class="btn-cyber w-100" style="border-color:#00ff80; color:#00ff80;">[ XEM TRỰC TIẾP MATCH ]</button></div>
                             <div class="game-card" style="color:var(--neon-blue); border:2px solid var(--neon-blue); box-shadow:0 0 15px rgba(0,240,255,0.3);"><h4 class="text-blue glow-pulse">✈️ KHÔNG CHIẾN CRASH</h4><p>Cất cánh từ hầm chứa. Chốt lời trước khi phi cơ địch bắn nổ!</p><button onclick="openAirplaneGame()" class="btn-cyber w-100" style="border-color:var(--neon-blue); color:var(--neon-blue);">[ LÊN MÁY BAY CHƠI LIVE ]</button></div>
                             <div class="game-card" style="color:#fff; border:2px solid #fff; box-shadow:0 0 15px rgba(255,255,255,0.3);"><h4 style="color:#fff" class="glow-pulse">🎲 TÀI XỈU 3D</h4><p>Nặn xúc xắc siêu chân thực. Bão cái húp trọn bàn.</p><div style="display:flex; gap:5px;"><button onclick="playTaiXiu('TAI')" class="btn-cyber w-100" style="border-color:#fff; color:#fff;">TÀI</button><button onclick="playTaiXiu('XIU')" class="btn-cyber w-100" style="border-color:#fff; color:#fff;">XỈU</button></div></div>
                             <div class="game-card" style="color:#ff69b4; border:2px solid #ff69b4; box-shadow:0 0 15px rgba(255,105,180,0.3);"><h4 style="color:#ff69b4" class="glow-pulse">🧸 GẮP GẤU BÔNG</h4><p>Gắp siêu cute. Trúng Kỳ Lân Hiếm ăn x10!</p><button onclick="playClawMachine()" class="btn-cyber w-100" style="border-color:#ff69b4; color:#ff69b4;">[ GẮP 1 LẦN ]</button></div>
                             <div class="game-card" style="color:#9370db; border:2px solid #9370db; box-shadow:0 0 15px rgba(147,112,219,0.3);"><h4 style="color:#9370db" class="glow-pulse">🃏 BÓI TAROT</h4><p>Lật bài vận mệnh. Tùy lá mà hốt tiền/mất trắng!</p><button onclick="playTarot()" class="btn-cyber w-100" style="border-color:#9370db; color:#9370db;">[ LẬT BÀI ]</button></div>
-                            <div class="game-card" style="color:var(--neon-gold); border:2px solid var(--neon-gold); box-shadow:0 0 15px rgba(255,215,0,0.3);"><h4 class="text-gold glow-pulse">📈 TRADING CRYPTO</h4><p>Mua Coin. Gồng lãi 5 tháng. Chốt hay Hold?</p><button onclick="playCrypto()" class="btn-cyber w-100" style="border-color:var(--neon-gold); color:var(--neon-gold);">[ ĐẦU TƯ LIỀN ]</button></div>
                             <div class="game-card" style="color:var(--neon-blue); border:2px solid var(--neon-blue); box-shadow:0 0 15px rgba(0,240,255,0.3);"><h4 class="text-blue glow-pulse">🦑 CẦU KÍNH (SQUID)</h4><p>5 bước sinh tử. Trái hay Phải? Ăn x20.</p><button onclick="playSquidGame()" class="btn-cyber w-100" style="border-color:var(--neon-blue); color:var(--neon-blue);">[ BƯỚC LÊN CẦU ]</button></div>
                             <div class="game-card" style="color:var(--neon-red); border:2px solid var(--neon-red); box-shadow:0 0 15px rgba(255,0,60,0.3);"><h4 class="text-red glow-pulse">👹 SĂN BOSS VỰC</h4><p>Mua vũ khí. Chém Boss kiếm tiền x3.</p><button onclick="playBossRaid()" class="btn-cyber w-100" style="border-color:var(--neon-red); color:var(--neon-red);">[ VÀO DUNGEON ]</button></div>
                             <div class="game-card" style="color:var(--neon-green); border:2px solid var(--neon-green); box-shadow:0 0 15px rgba(0,255,128,0.3);"><h4 class="text-green glow-pulse">💣 MÁY DÒ MÌN</h4><p>Máy bay thả 4 quả mìn. Chọn 3 ô an toàn.</p><button onclick="playMinesweeper()" class="btn-cyber w-100" style="border-color:var(--neon-green); color:var(--neon-green);">[ DÒ MÌN X5 ]</button></div>
@@ -292,6 +306,22 @@
         </div>
     </div>
 
+    <div id="crypto-modal" class="overlay" style="display:none; z-index: 4000;">
+        <div class="glass-box login-panel" style="width:700px; border-color:var(--neon-gold);">
+            <h2 class="text-gold glow-pulse" style="margin-top:0;"><i class="fas fa-chart-line"></i> TRADING CRYPTO LIVE</h2>
+            <div class="sky-container" id="crypto-zone" style="background: #050505; border-color: var(--neon-gold); position: relative; height: 300px;">
+                <div class="multiplier-display" id="crypto-multiplier" style="color: var(--neon-gold); top: 30%;">x1.00</div>
+                <canvas id="cryptoCanvas" width="660" height="300" style="position:absolute; bottom:0; left:0;"></canvas>
+                <div id="crypto-rugpull" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:40px; color:var(--neon-red); font-weight:900; z-index:10; white-space:nowrap; background:rgba(0,0,0,0.8); padding:10px 30px; border:3px dashed var(--neon-red); border-radius:10px; text-shadow: 0 0 20px red;">📉 RUG PULL !!!</div>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:15px; margin-top:20px;">
+                <input type="number" id="crypto-bet" placeholder="Nhập PP đầu tư..." class="cyber-input w-100" style="font-size:18px; color:var(--neon-gold); text-align:center; font-weight:bold;">
+            </div>
+            <button id="crypto-action-btn" onclick="startCryptoLive()" class="btn-cyber w-100" style="padding:15px; font-size:18px; border-color:var(--neon-gold); color:var(--neon-gold);">[ 🚀 MUA VÀO & GỒNG LÃI ]</button>
+            <button id="crypto-exit-btn" onclick="closeCryptoGame()" class="btn-cyber w-100" style="background:transparent; border:none; color:#888; margin-top:10px;">[ RỜI SÀN ]</button>
+        </div>
+    </div>
+
     <div id="taixiu-modal" class="overlay" style="display:none; z-index: 6000;">
         <div class="glass-box login-panel" style="width:500px; padding: 30px; border-color:#fff;">
             <h2 class="text-gold glow-pulse" style="margin: 0 0 20px 0; font-size:30px;"><i class="fas fa-dice"></i> TÀI XỈU 3D</h2>
@@ -321,6 +351,47 @@
     <div id="quiz-modal" class="overlay" style="display:none; z-index: 2000;"><div class="glass-box login-panel" style="border-color:var(--neon-blue); text-align:left; width:500px;"><div style="display: flex; justify-content: space-between; align-items: flex-start;"><h3 id="quiz-title" class="text-blue" style="margin-top:0;"></h3><h3 id="quiz-timer" class="text-red glow-pulse" style="margin-top:0; white-space: nowrap;"></h3></div><p id="quiz-question" style="font-size:18px; margin:20px 0;"></p><p id="quiz-info" style="font-size:12px; color:#888; margin-bottom:15px;"></p><button onclick="submitQuiz('A')" class="btn-cyber w-100" style="background:rgba(0,0,0,0.5); text-align:left; margin-bottom:10px; padding:15px;"><strong class="text-blue">A.</strong> <span id="quiz-optA"></span></button><button onclick="submitQuiz('B')" class="btn-cyber w-100" style="background:rgba(0,0,0,0.5); text-align:left; margin-bottom:10px; padding:15px;"><strong class="text-blue">B.</strong> <span id="quiz-optB"></span></button><button onclick="closeQuizModal()" class="btn-outline-gold w-100">[ BỎ CHẠY ]</button></div></div>
     <div id="view-grades-modal" class="overlay" style="display:none; z-index: 1000;"><div class="glass-box login-panel" style="width:850px; max-height:85vh; display:flex; flex-direction:column; padding:30px;"><h3 class="text-gold">[ HỒ SƠ ĐIỂM CHI TIẾT ]</h3><p id="view-grades-student-name" class="text-blue" style="margin-bottom:15px;"></p><div class="table-container" style="flex:1; overflow-y:auto; border:1px solid #333; margin:15px 0;"><table class="cyber-table"><thead><tr><th>Kỳ</th><th>Môn</th><th>T</th><th>G</th><th>C</th><th>Tổng</th><th>Lưu</th></tr></thead><tbody id="admin-view-grades-body"></tbody></table></div><button onclick="closeViewGradesModal()" class="btn-cyber w-100">[ ĐÓNG ]</button></div></div>
     <div id="subject-modal" class="overlay" style="display:none; z-index: 1000;"><div class="glass-box login-panel" style="width:450px; border-color:var(--neon-green);"><h3 class="text-green">[ NHẬP ĐIỂM MÔN MỚI ]</h3><div style="display:flex; gap:10px; margin-bottom:10px;"><select id="subj-year" class="cyber-input w-100"><option value="1">Năm 1</option><option value="2">Năm 2</option><option value="3">Năm 3</option><option value="4">Năm 4</option></select><select id="subj-sem" class="cyber-input w-100"><option value="1">Kỳ 1</option><option value="2">Kỳ 2</option></select></div><input type="text" id="subj-name" placeholder="Tên môn học" class="cyber-input w-100" style="margin-bottom:10px;"><div style="display:flex; gap:10px; margin-bottom:20px;"><input type="number" id="subj-bth" placeholder="Điểm T" class="cyber-input"><input type="number" id="subj-gk" placeholder="Điểm G" class="cyber-input"><input type="number" id="subj-ck" placeholder="Điểm C" class="cyber-input"></div><button onclick="adminSaveSubject()" class="btn-cyber w-100" style="border-color:var(--neon-green); color:var(--neon-green); margin-bottom:10px;">[ LƯU ĐIỂM ]</button><button onclick="closeSubjectModal()" class="btn-cyber w-100" style="background:transparent; border:none; color:#888;">[ HỦY ]</button></div></div>
+
+    <div id="tienlen-modal" class="overlay" style="display:none; z-index: 4500;">
+        <div class="glass-box login-panel" style="width:1100px; max-width: 95vw; background: rgba(10,15,10,0.98); border-color:#ffcc00; padding: 25px; box-shadow: 0 0 50px rgba(255,204,0,0.2);">
+            <h2 class="text-gold glow-pulse" style="margin-top:0; font-size:28px; border-bottom: 1px solid rgba(255,204,0,0.3); padding-bottom: 15px;"><i class="fas fa-spade"></i> SÒNG TIẾN LÊN VIP <i class="fas fa-heart" style="color:var(--neon-red);"></i></h2>
+            
+            <div id="tl-lobby" style="padding: 20px 0;">
+                <button onclick="tlCreateRoom()" class="btn-cyber w-100" style="padding:20px; margin-bottom: 25px; border-color:#ffcc00; color:#ffcc00; font-size:18px;"><i class="fas fa-plus-circle"></i> [ MỞ BÀN MỚI ]</button>
+                <div id="tl-room-list" class="grid-layout" style="grid-template-columns: 1fr 1fr; gap: 15px; max-height: 400px; overflow-y: auto; text-align: left;"></div>
+                <button onclick="closeTienLenModal()" class="btn-cyber w-100" style="background:transparent; border:none; color:#888; margin-top:20px;">[ THOÁT QUÁN BÀI ]</button>
+            </div>
+
+            <div id="tl-board" style="display:none; position: relative; width: 100%; height: 600px; background: radial-gradient(circle, #2e7d32 0%, #0d2e11 90%); border: 8px solid #3e2723; border-radius: 120px; box-shadow: inset 0 0 60px rgba(0,0,0,0.9);">
+                
+                <div id="tl-pot-display" style="position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); padding: 5px 20px; border-radius: 20px; border: 1px solid #ffcc00; color: #ffcc00; font-weight: bold; font-size: 16px;">TỔNG CƯỢC: 0 PP</div>
+                
+                <div id="tl-center-pile" style="position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: -40px; z-index: 10;"></div>
+                <div id="tl-turn-msg" style="position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; color: #fff; font-size: 22px; text-shadow: 0 0 10px #000; background: rgba(0,0,0,0.5); padding: 5px 20px; border-radius: 10px; z-index: 15;"></div>
+
+                <div id="tl-seat-top" class="tl-seat" style="top: -30px; left: 50%; transform: translateX(-50%);"></div>
+                <div id="tl-seat-left" class="tl-seat" style="top: 50%; left: -30px; transform: translateY(-50%);"></div>
+                <div id="tl-seat-right" class="tl-seat" style="top: 50%; right: -30px; transform: translateY(-50%);"></div>
+                
+                <div id="tl-seat-bottom" class="tl-seat" style="bottom: -30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; width: 100%;">
+                    <div id="tl-my-info" style="margin-bottom: 10px;"></div>
+                    <div id="tl-my-hand" style="display: flex; height: 130px; justify-content: center; width: 80%;"></div>
+                    
+                    <div id="tl-timer-bar-container" style="display:none; width: 300px; height: 8px; background: #222; border-radius: 4px; margin-top: 10px; border: 1px solid #444; overflow:hidden;">
+                        <div id="tl-timer-bar" style="height: 100%; background: var(--neon-green); width: 100%; transition: width 1s linear;"></div>
+                    </div>
+
+                    <div id="tl-controls" style="margin-top: 15px; display: flex; gap: 15px; display: none;">
+                        <button onclick="tlPlayCards()" class="btn-cyber glow-pulse" style="border-color:#00ff80; color:#00ff80; padding: 12px 40px; font-size: 16px;">[ 🔥 ĐÁNH BÀI ]</button>
+                        <button onclick="tlPassTurn(false)" class="btn-cyber" style="border-color:#ff003c; color:#ff003c; padding: 12px 40px; font-size: 16px; background: rgba(255,0,60,0.1);">[ BỎ LƯỢT ]</button>
+                    </div>
+                </div>
+                
+                <button id="tl-start-btn" onclick="tlStartGame()" class="btn-cyber glow-pulse" style="display:none; position:absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-color:#ffcc00; color:#ffcc00; z-index:20; font-size: 20px; padding: 20px 40px;">[ CHIA BÀI ]</button>
+                <button onclick="tlLeaveGame()" class="btn-mini del" style="position:absolute; top: 20px; right: 20px; padding: 10px 20px; font-size: 14px;"><i class="fas fa-sign-out-alt"></i> Rời Bàn</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="script.js"></script>
 </body>
